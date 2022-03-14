@@ -4,13 +4,8 @@ pragma solidity ^0.8.12;
 contract passGas {
     address owner = msg.sender;
 
-    uint256 contractBalance;
-
     mapping(uint256 => bool) usedNonces;
 
-    function fund() public payable {
-        contractBalance = contractBalance + msg.value;
-    }
 
     function claimPayment(uint256 amount, uint256 nonce, bytes memory sig) public {
         require(!usedNonces[nonce]);
