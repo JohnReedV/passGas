@@ -4,17 +4,21 @@ pragma solidity ^0.8.12;
 contract passGas {
     address owner = msg.sender;
 
+    uint256 contractBalance;
+
     mapping(uint256 => bool) usedNonces;
 
-    function ReceiverPays() public payable { }
-
+    function fund() public payable {
+        contractBalance = contractBalance + msg.value;
+    }
 
     function claimPayment(uint256 amount, uint256 nonce, bytes memory sig) public {
         require(!usedNonces[nonce]);
         usedNonces[nonce] = true;
 
         // This recreates the message that was signed on the client.
-        bytes32 message = prefixed(keccak256(abi.encodePacked(msg.sender, amount, nonce, this)));
+        bytes32 message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
+        (keccak256(abi.encodePacked(msg.sender, amount, nonce, this)))));
 
         require(recoverSigner(message, sig) == owner);
 
@@ -66,10 +70,5 @@ contract passGas {
         (v, r, s) = splitSignature(sig);
 
         return ecrecover(message, v, r, s);
-    }
-
-    // Builds a prefixed hash to mimic the behavior of eth_sign.
-    function prefixed(bytes32 hash) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
     }
 }
